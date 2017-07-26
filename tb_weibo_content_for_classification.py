@@ -9,7 +9,6 @@ import os
 import sys
 import logging
 import MySQLdb
-import MySQLdb.cursors
 
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(ROOT_PATH)
@@ -63,7 +62,6 @@ class Filter(object):
     def convert_2_sql(self):
         """
         generate query sql
-
         """
         filters = []
         if self.product_ids is not None:
@@ -81,9 +79,9 @@ class Filter(object):
         filters.append("is_related=1")
         filters.append("emotion_type in (1,0,-1)")
         if 0 == len(filters):
-            filters_str = "limit 0,10000"
+            filters_str = "LIMIT 0,10000"
         else:
-            filters_str = "where %s" % " and ".join(filters)
+            filters_str = "WHERE %s" % " AND ".join(filters)
         return "SELECT %s FROM tb_content_for_mark %s" % (",".join(self.return_fields), filters_str)
 
 
@@ -119,7 +117,6 @@ def query(filter_instance):
 
 def get_connect_yuanfangdb():
     """
-
     :return:
     """
     conn = None

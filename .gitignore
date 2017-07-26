@@ -1,0 +1,10 @@
+.DStore
+.idea
+**/*.iml
+**/target
+**/*.pyc
+**/*.sql
+**/download_data/
+**/sql/
+**/model/
+**/._*.py
