@@ -1,58 +1,42 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 2017年7月19日
 
 @author: baijingting
-'''
+"""
 
 import os
-import sys
 import pickle
-import numpy as np
-from gensim.models.doc2vec import LabeledSentence, Doc2Vec
-from sklearn.utils import shuffle
-
-import constant
+import sys
 from multiprocessing import Pool
-import tb_weibo_content_for_classification as twc
-import apply_preprogress as ap
-from segment import postag_process
-from segment import segment_process
+import numpy as np
+from gensim.models.doc2vec import LabeledSentence
+from gensim.models.doc2vec import Doc2Vec
+from sklearn.utils import shuffle
+from sklearn.cross_validation import train_test_split
 
-ROOT_PATH = os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(ROOT_PATH)
 
-
-def save_data(path, data):
-    s = '\n'.join([str(x) for x in data])
-    with open(path, "wb") as f:
-        f.write(s)
-
-
-def load_data_x(path):
-    data = []
-    with open(path, "rb") as f:
-        for line in f.readlines():
-            line = line.strip("\n").split(" ")
-            data.append(line)
-    return data
+from src.datafactory.weibo_emotion_classification import constant
+from src.datafactory.weibo_emotion_classification import segment_process
+from src.datafactory.weibo_emotion_classification import tb_weibo_content_for_classification as twc
+from src.datafactory.weibo_emotion_classification import apply_preprogress as ap
+from src.datafactory.weibo_emotion_classification import model_evaluation as me
+from src.datafactory.weibo_emotion_classification import classification_model as cm
 
 
-def load_data_y(path):
-    data = []
-    with open(path, "rb") as f:
-        for line in f.readlines():
-            line = int(float(line.strip("\n")))
-            data.append(line)
-    return data
-
-
-def get_train_dataset(startdate1, startdate2, enddate):
-
+def get_train_dataset(startdate1, startdate2, startdate3, enddate):
+    """
+    :param startdate1:
+    :param startdate2:
+    :param startdate3:
+    :param enddate:
+    :return:
+    """
     pos_data = read_weibo_emotion_data(startdate1, enddate, emotion=1)
-    neg_data = read_weibo_emotion_data(startdate1, enddate, emotion=-1)
-    neu_data = read_weibo_emotion_data(startdate2, enddate, emotion=0)
+    neg_data = read_weibo_emotion_data(startdate2, enddate, emotion=-1)
+    neu_data = read_weibo_emotion_data(startdate3, enddate, emotion=0)
     pos_data = get_segment(pos_data)
     neg_data = get_segment(neg_data)
     neu_data = get_segment(neu_data)
@@ -64,6 +48,13 @@ def get_train_dataset(startdate1, startdate2, enddate):
 
 
 def read_weibo_emotion_data(start_date, end_date, emotion, data_source_ids=1):
+    """
+    :param start_date:
+    :param end_date:
+    :param emotion:
+    :param data_source_ids:
+    :return:
+    """
     my_filter = twc.Filter()
     my_filter.set_content_datetime(start_date, end_date)
     my_filter.set_emotion(emotion)
@@ -75,6 +66,10 @@ def read_weibo_emotion_data(start_date, end_date, emotion, data_source_ids=1):
 
 
 def get_segment(result):
+    """
+    :param result:
+    :return:
+    """
     aux = []
     pool = Pool(processes=constant.process_num)
     try:
@@ -104,6 +99,10 @@ def get_segment(result):
 
 
 def single_segment(line):
+    """
+    :param line:
+    :return:
+    """
     aux = line['content_detail'].replace("\\", "\\\\").replace("\"", "\\\"") \
         .replace("\'", "\\\"").replace("%", "").replace("`", "")
     aux = segment_process.get_segment(aux)
@@ -112,52 +111,12 @@ def single_segment(line):
     return aux
 
 
-def labelizeReviews(reviews, label_type):
-    labelized = []
-    for i, v in enumerate(reviews):
-        label = '%s_%s' % (label_type, i)
-        labelized.append(LabeledSentence(v, [label]))
-    return labelized
-
-
-def train(x_train, x_test, size, epoch_num=10):
-
-    model_dm = Doc2Vec(min_count=1, window=10, size=size, sample=1e-3, negative=5, workers=3)
-    model_dbow = Doc2Vec(min_count=1, window=10, size=size, sample=1e-3, negative=5, dm=0, workers=3)
-
-    total_data = x_train + x_test
-
-    model_dm.build_vocab(total_data)
-    model_dbow.build_vocab(total_data)
-
-    for epoch in range(epoch_num):
-        model_dm.train(shuffle(total_data))
-        model_dbow.train(shuffle(total_data))
-
-    with open(constant.dm_model_path, "wb") as f:
-        pickle.dump(model_dm, f)
-    with open(constant.dbow_model_path, "wb") as f:
-        pickle.dump(model_dbow, f)
-
-    return model_dm, model_dbow
-
-
-def getVecs(model, corpus, size):
-    print np.array(model.docvecs[corpus[0].tags[0]]).shape
-    vecs = [np.array(model.docvecs[z.tags[0]]).reshape((1, size)) for z in corpus]
-    return np.concatenate(vecs)
-
-
-def get_vectors(model_dm, model_dbow, data, size):
-    print len(model_dm.docvecs)
-    print model_dm.docvecs.shape
-    vecs_dm = getVecs(model_dm, data, size)
-    vecs_dbow = getVecs(model_dbow, data, size)
-    vecs = np.hstack((vecs_dm, vecs_dbow))
-    return vecs
-
-
 def lda_vecs(lda_model, data):
+    """
+    :param lda_model:
+    :param data:
+    :return:
+    """
     ret = []
     for line in data:
         arr = [0 for i in range(constant.topic_nums)]
@@ -165,3 +124,42 @@ def lda_vecs(lda_model, data):
             arr[item[0]] = item[1]
         ret.append(arr)
     return ret
+
+
+def reclassify_data(x_vecs, data_y, pred_y):
+    """
+    :param x_vecs:
+    :param data_y:
+    :param pred_y:
+    :return:
+    """
+    pos_x = []
+    pos_y = []
+    neg_x = []
+    neg_y = []
+    for i in range(len(pred_y)):
+        if pred_y[i] == 1:
+            pos_x.append(x_vecs[i])
+            pos_y.append(data_y[i])
+
+        if pred_y[i] == -1:
+            neg_x.append(x_vecs[i])
+            neg_y.append(data_y[i])
+    return pos_x, pos_y, neg_x, neg_y
+
+
+def retrain(pos_x, pos_y, neg_x, neg_y):
+    """
+    :return:
+    """
+    x_train, x_test, y_train, y_test = train_test_split(pos_x, pos_y, test_size=0.2)
+    model = cm.train(x_train, y_train, constant.reclassify_pos_model_path)
+    pred_y = cm.predict(model, x_test)
+    print "reclassify_pos_test -------------------------------------------"
+    me.classification_evaluate(y_test, pred_y)
+
+    x_train, x_test, y_train, y_test = train_test_split(neg_x, neg_y, test_size=0.2)
+    model = cm.train(x_train, y_train, constant.reclassify_neg_model_path)
+    pred_y = cm.predict(model, x_test)
+    print "reclassify_neg_test -------------------------------------------"
+    me.classification_evaluate(y_test, pred_y)

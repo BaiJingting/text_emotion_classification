@@ -1,101 +1,104 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 2017年7月19日
 
 @author: baijingting
-'''
-
+"""
+import os
+import sys
 import pickle
-from datetime import datetime
-
-
-import train_preprogress as tp
-import apply_preprogress as ap
-import classification_model as cm
-import constant
-
-from gensim.corpora import Dictionary
 from gensim import models
+from gensim.corpora import Dictionary
 from sklearn.cross_validation import train_test_split
+
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(ROOT_PATH)
+
+from src.datafactory.weibo_emotion_classification import apply_preprogress as ap
+import src.datafactory.weibo_emotion_classification.classification_model as cm
+from src.datafactory.weibo_emotion_classification import constant
+import src.datafactory.weibo_emotion_classification.train_preprogress as tp
+import src.datafactory.weibo_emotion_classification.model_evaluation as me
 
 if __name__ == "__main__":
 
-    if constant.OBJECTIVE == "train":
+    if constant.OBJECTIVE == "train_overall":
 
-        # data_x, data_y = tp.get_train_dataset\
-        #     (constant.POS_NEG_DATA_START_DATE, constant.NEU_DATA_START_DATE, constant.POS_NEG_DATA_END_DATE)
-        #
-        # tp.save_data(constant.train_data_x_path, data_x)
-        # tp.save_data(constant.train_data_y_path, data_y)
-
-        data_x = tp.load_data_x(constant.train_data_x_path)
-
-        ## doc2vec
-        # x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.2)
-        # x_train = tp.labelizeReviews(x_train, 'TRAIN')
-        # x_test = tp.labelizeReviews(x_test, 'TEST')
-        # model_dm, model_dbow = tp.train(x_train, x_test, constant.DM_DBOW_VEC_LEN, epoch_num=constant.epoch_num)
-        # x_train = tp.get_vectors(model_dm, model_dbow, x_train, constant.DM_DBOW_VEC_LEN)
-        # x_test = tp.get_vectors(model_dm, model_dbow, x_test, constant.DM_DBOW_VEC_LEN)
+        data_x, data_y = tp.get_train_dataset(constant.POS_START_DATE, constant.NEG_START_DATE,
+                                              constant.NEU_START_DATE, constant.TRAIN_END_DATE)
 
         ## lda
-        # dictionary = Dictionary(data_x)
-        # dictionary.filter_extremes(no_below=5, no_above=0.7)
-        # dictionary.save(constant.dictionary_path)
+        dictionary = Dictionary(data_x)
+        dictionary.filter_extremes(no_below=5, no_above=0.7)
+        dictionary.save(constant.dictionary_path)
 
-        dictionary = Dictionary.load(constant.dictionary_path)
-        lda_model = models.LdaModel.load(constant.lda_model_path)
-        data_x = ap.lda_vecs(dictionary, lda_model, data_x)
-
-        tp.save_data(constant.train_data_vecs_path, data_x)
-
-
-        data_x = tp.load_data_x(constant.train_data_vecs_path)
-        data_y = tp.load_data_y(constant.train_data_y_path)
-
-
-        # corpus = [dictionary.doc2bow(text) for text in data_x]
-        # lda_model = models.LdaModel(corpus, id2word=dictionary, num_topics=constant.topic_nums, iterations=500)
-        # lda_model.save(constant.lda_model_path)
-
-        time3 = datetime.now()
-        print "time consuming for dictionary and model: ", (time3 - time2).seconds
-
+        corpus = [dictionary.doc2bow(text) for text in data_x]
+        lda_model = models.LdaModel(corpus, id2word=dictionary,
+                                    num_topics=constant.topic_nums, iterations=500)
+        lda_model.save(constant.lda_model_path)
+        data_x = tp.lda_vecs(lda_model, corpus)
 
         ### classify
 
         x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.2)
 
-        model = cm.train(x_train, y_train)
+        model = cm.train(x_train, y_train, constant.classification_model_path)
         pred_y = cm.predict(model, x_test)
-        cm.classification_evaluate(y_test, pred_y)
+        me.classification_evaluate(y_test, pred_y)
 
-    elif constant.OBJECTIVE == "apply":
-
-        # data_x, data_y = ap.get_apply_dataset(constant.START_DATE, constant.END_DATE)
-        #
-        # tp.save_data(constant.apply_data_x_path, data_x)
-        # tp.save_data(constant.apply_data_y_path, data_y)
-
-        data_x = tp.load_data_x(constant.apply_data_x_path)
-        data_y = tp.load_data_y(constant.apply_data_y_path)
-
-        ## doc2vec
-        # data_x = tp.labelizeReviews(data_x, 'APPLY')
-        # model_dm, model_dbow = ap.update_model(data_x)
-        # x_vecs = tp.get_vectors(model_dm, model_dbow, data_x, constant.DM_DBOW_VEC_LEN)
-
-        # lda
-        time1 = datetime.now()
+    elif constant.OBJECTIVE in ["apply_reclassify", "train_reclassify"] :
+        if constant.OBJECTIVE=="train_reclassify":
+            data_x, data_y = ap.get_apply_dataset(constant.RECLASSIFY_TRAIN_START_DATE,
+                                                  constant.RECLASSIFY_TRAIN_END_DATE)
+        else:
+            data_x, data_y = ap.get_apply_dataset(constant.RECLASSIFY_APPLY_START_DATE,
+                                                  constant.RECLASSIFY_APPLY_END_DATE)
 
         lda_model = models.LdaModel.load(constant.lda_model_path)
         dictionary = Dictionary.load(constant.dictionary_path)
         x_vecs = ap.lda_vecs(dictionary, lda_model, data_x)
 
-        time2 = datetime.now()
-        print "time consuming for dictionary and model: ", (time2 - time1).seconds
+        with open(constant.classification_model_path, "r") as f:
+            classification_model = pickle.load(f)
 
-        ## predict
+        pred_y = cm.predict(classification_model, x_vecs)
+
+        me.classification_evaluate(data_y, pred_y)
+
+        ## 在召回基础上提升精确率
+        if constant.OBJECTIVE == "train_reclassify":
+
+            pos_x, pos_y, neg_x, neg_y = tp.reclassify_data(x_vecs, data_y, pred_y)
+            tp.retrain(pos_x, pos_y, neg_x, neg_y)
+
+        else:
+
+            pos_x, pos_y, neg_x, neg_y = tp.reclassify_data(x_vecs, data_y, pred_y)
+
+            with open(constant.reclassify_pos_model_path, "r") as f:
+                reclassify_pos_model = pickle.load(f)
+            pos_pred_y = reclassify_pos_model.predict(pos_x)
+            print "reclassify_pos ---------------------------------------------"
+            me.classification_evaluate(pos_y, pos_pred_y)
+
+            with open(constant.reclassify_neg_model_path, "r") as f:
+                reclassify_neg_model = pickle.load(f)
+            neg_pred_y = reclassify_neg_model.predict(neg_x)
+            print "reclassify_neg ---------------------------------------------"
+            me.classification_evaluate(neg_y, neg_pred_y)
+
+            ## 综合评估
+            me.evaluate(data_y, pred_y, pos_pred_y, neg_pred_y)
+
+
+    elif constant.OBJECTIVE == "apply_overall":
+
+        data_x, data_y = ap.get_apply_dataset(constant.APPLY_START_DATE, constant.APPLY_END_DATE)
+
+        lda_model = models.LdaModel.load(constant.lda_model_path)
+        dictionary = Dictionary.load(constant.dictionary_path)
+        x_vecs = ap.lda_vecs(dictionary, lda_model, data_x)
 
         with open(constant.classification_model_path, "rb") as f:
             classification_model = pickle.load(f)

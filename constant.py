@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 2017年7月19日
 
 @author: baijingting
-'''
+"""
 
-OBJECTIVE = "train"
-# OBJECTIVE = "apply"
+OBJECTIVE = "train_overall"
+#OBJECTIVE = "train_reclassify"
+# OBJECTIVE = "apply_reclassify"
+# OBJECTIVE
 
-train_data_x_path =  "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/train_data_x.txt"
-train_data_y_path =  "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/train_data_y.txt"
+train_data_x_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/train_data_x.txt"
+train_data_y_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/train_data_y.txt"
 
 train_data_vecs_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/train_data_vecs.txt"
 
-apply_data_x_path =  "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/apply_data_x.txt"
-apply_data_y_path =  "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/apply_data_y.txt"
+apply_data_x_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/apply_data_x.txt"
+apply_data_y_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/apply_data_y.txt"
 
 WORD_POS_MAP = {
     0: ("Me", "合并词"),  # 无法判断词性
@@ -34,24 +36,34 @@ KEEP_POS = [1, 5, 6, 7, 8, 11, 12, 16, 19, 34, 35, 36, 38, 39]
 
 process_num = 31
 
-dm_model_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/dm_model.pkl"
-dbow_model_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/dbow_model.pkl"
+dictionary_path = "/home/search/baijingting/feed/src/datafactory/weibo_emotion_classification" \
+                  "/model/dictionary.dict"
+lda_model_path = "/home/search/baijingting/feed/src/datafactory/weibo_emotion_classification" \
+                 "/model/lda_model.pkl"
 
-dictionary_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/dictionary.dict"
-lda_model_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/lda_model.pkl"
+classification_model_path = "/home/search/baijingting/feed/src/datafactory/" \
+                            "weibo_emotion_classification/model/classification_model.pkl"
+reclassify_pos_model_path = "/home/search/baijingting/feed/src/datafactory" \
+                       "/weibo_emotion_classification/model/reclassify_pos_model.pkl"
+reclassify_neg_model_path = "/home/search/baijingting/feed/src/datafactory" \
+                       "/weibo_emotion_classification/model/reclassify_neg_model.pkl"
 
-classification_model_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/classification_model.pkl"
 
 ## train args
-POS_NEG_DATA_START_DATE = 20170615
-POS_NEG_DATA_END_DATE = 20170721
-NEU_DATA_START_DATE = 20170720
+NEG_START_DATE = 20170610
+NEU_START_DATE = 20170717
+POS_START_DATE = 20170622
+TRAIN_END_DATE = 20170718
 
-DM_DBOW_VEC_LEN = 500
-epoch_num = 10
+topic_nums = 500
 
-topic_nums = 200
+## reclassify args
+RECLASSIFY_TRAIN_START_DATE = 20170719
+RECLASSIFY_TRAIN_END_DATE = 20170723
 
-## apply args
-START_DATE = 20170722
-END_DATE = 20170723
+RECLASSIFY_APPLY_START_DATE = 20170724
+RECLASSIFY_APPLY_END_DATE = 20170725
+
+## apply_overall args
+APPLY_START_DATE = 20170724
+APPLY_END_DATE = 20170725

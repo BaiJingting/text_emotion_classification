@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 2017年7月19日
 
 @author: baijingting
-'''
+"""
 
 import os
 import sys
-import pickle
-from sklearn.utils import shuffle
-
-import constant
 from multiprocessing import Pool
-import tb_weibo_content_for_classification as twc
 
-ROOT_PATH = os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(ROOT_PATH)
 
-from segment import postag_process
-from segment import segment_process
+from src.datafactory.weibo_emotion_classification import constant
+from src.datafactory.weibo_emotion_classification import segment_process
+from src.datafactory.weibo_emotion_classification import tb_weibo_content_for_classification as twc
 
 
 def get_apply_dataset(startdate, enddate):
+    """
+
+    :param startdate:
+    :param enddate:
+    :return:
+    """
     result = read_weibo_data(startdate, enddate)
     data = get_segment(result)
 
@@ -36,6 +37,13 @@ def get_apply_dataset(startdate, enddate):
 
 
 def read_weibo_data(start_date, end_date, data_source_ids=1):
+    """
+
+    :param start_date:
+    :param end_date:
+    :param data_source_ids:
+    :return:
+    """
     my_filter = twc.Filter()
     my_filter.set_content_datetime(start_date, end_date)
     my_filter.set_data_source_ids(data_source_ids)
@@ -45,6 +53,11 @@ def read_weibo_data(start_date, end_date, data_source_ids=1):
 
 
 def get_segment(result):
+    """
+
+    :param result:
+    :return:
+    """
     ret = []
     pool = Pool(processes=constant.process_num)
     try:
@@ -59,6 +72,7 @@ def get_segment(result):
         pool.join()
     return ret
 
+
 # ## 过滤部分词性
 # def single_segment(line):
 #     aux = line['content_detail'].replace("\\", "\\\\").replace("\"", "\\\"") \
@@ -71,6 +85,10 @@ def get_segment(result):
 
 
 def single_segment(line):
+    """
+    :param line:
+    :return:
+    """
     aux = line['content_detail'].replace("\\", "\\\\").replace("\"", "\\\"") \
         .replace("\'", "\\\"").replace("%", "").replace("`", "")
     line['content_detail'] = segment_process.get_segment(aux)
@@ -80,6 +98,10 @@ def single_segment(line):
 
 
 def filter_postag(list):
+    """
+    :param list:
+    :return:
+    """
     ret = []
     for i in list:
         if i[1] in constant.KEEP_POS:
@@ -87,20 +109,13 @@ def filter_postag(list):
     return ret
 
 
-def update_model(data_x):
-    with open(constant.dm_model_path, "rb") as f:
-        model_dm = pickle.load(f)
-    with open(constant.dbow_model_path, "rb") as f:
-        model_dbow = pickle.load(f)
-
-    for epoch in range(constant.epoch_num):
-        model_dm.train(shuffle(data_x))
-        model_dbow.train(shuffle(data_x))
-
-    return model_dm, model_dbow
-
-
 def lda_vecs(dictionary, lda_model, data):
+    """
+    :param dictionary:
+    :param lda_model:
+    :param data:
+    :return:
+    """
     ret = []
     for line in data:
         line = dictionary.doc2bow(line)

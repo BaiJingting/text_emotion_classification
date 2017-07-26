@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 2017年7月19日
 
 @author: baijingting
-'''
+"""
 
 import os
 import sys
 import logging
 import MySQLdb
+import MySQLdb.cursors
 
-ROOT_PATH = os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(ROOT_PATH)
-import sql.connect
+
+from src.datafactory.config import database
 
 class Filter(object):
     """
@@ -47,20 +48,17 @@ class Filter(object):
         """
         self.data_source_ids = data_source_ids
 
-
     def set_emotion(self, emotion):
         """
         set data_source_id list
         """
         self.emotion = emotion
 
-
     def set_return_feilds(self, return_fields):
         """
         set data_source_id list
         """
         self.return_fields = return_fields
-
 
     def convert_2_sql(self):
         """
@@ -102,7 +100,7 @@ def query(filter_instance):
     contents: dict
     """
     sql_query = filter_instance.convert_2_sql()
-    conn = sql.connect.get_connect_yuanfangdb()
+    conn = get_connect_yuanfangdb()
     if conn is None:
         logging.critical("get connect of yuanfang db failed")
         return None
@@ -117,6 +115,26 @@ def query(filter_instance):
     except UnicodeEncodeError as e:
         logging.critical("execute sql failed: %s" % e)
     return None
+
+
+def get_connect_yuanfangdb():
+    """
+
+    :return:
+    """
+    conn = None
+    try:
+        conn = MySQLdb.connect(host=database.YUANFANG_HOSTNAME,
+                               user=database.YUANFANG_USERNAME,
+                               passwd=database.YUANFANG_PASSWORD,
+                               db=database.YUANFANG_DB,
+                               port=database.YUANFANG_PORT,
+                               charset="utf8",
+                               cursorclass=MySQLdb.cursors.DictCursor)
+    except MySQLdb.Error as e:
+        logging.critical("create yuanfang db connect failed: %s" % e)
+    return conn
+
 
 
 if __name__ == "__main__":
