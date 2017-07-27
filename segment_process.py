@@ -5,9 +5,7 @@
  * Copyright (c) 2015 Baidu.com, Inc. All Rights Reserved
  * 
  **************************************************************************/
- 
- 
- 
+
 /**
  * @file nlpconnect.py
  * @author wangjing04(com@baidu.com)
@@ -67,7 +65,6 @@ class SegmentProcess(object):
                 wordsepbuf = segment_result_dict["scw_out"]["wordsepbuf"]
                 wordsepbuf_split = wordsepbuf.strip("\t").split("\t")
                 for word in wordsepbuf_split:
-
                     segment_result.append(word)
             else:
                 logging.critical("segment result(%s) error without wordsepbuf"
@@ -79,7 +76,6 @@ class SegmentProcess(object):
 
 def get_segment(ori_data):
     """
-
     :param ori_data:
     :return:
     """
