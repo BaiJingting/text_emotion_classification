@@ -8,6 +8,7 @@ Created on 2017年7月19日
 OBJECTIVE = "train_overall"
 # OBJECTIVE = "train_reclassify"
 # OBJECTIVE = "apply_reclassify"
+# OBJECTIVE = "apply_overall"
 
 train_data_x_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/train_data_x.txt"
 train_data_y_path = "/home/search/baijingting/yuanfang/nlp/yuanfang_nlp/src/weibo/train_data_y.txt"
