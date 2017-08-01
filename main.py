@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Created on 2017年7月19日
@@ -9,10 +10,9 @@ import sys
 import pickle
 from gensim import models
 from gensim.corpora import Dictionary
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 
-ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__)))))
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(ROOT_PATH)
 
 from src.datafactory.weibo_emotion_classification import apply_preprogress as ap
@@ -47,8 +47,8 @@ if __name__ == "__main__":
         pred_y = cm.predict(model, x_test)
         me.classification_evaluate(y_test, pred_y)
 
-    elif constant.OBJECTIVE in ["apply_reclassify", "train_reclassify"] :
-        if constant.OBJECTIVE=="train_reclassify":
+    elif constant.OBJECTIVE in ["apply_reclassify", "train_reclassify"]:
+        if constant.OBJECTIVE == "train_reclassify":
             data_x, data_y = ap.get_apply_dataset(constant.RECLASSIFY_TRAIN_START_DATE,
                                                   constant.RECLASSIFY_TRAIN_END_DATE)
         else:

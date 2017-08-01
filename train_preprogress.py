@@ -6,14 +6,10 @@ Created on 2017年7月19日
 """
 
 import os
-import pickle
 import sys
 from multiprocessing import Pool
 import numpy as np
-from gensim.models.doc2vec import LabeledSentence
-from gensim.models.doc2vec import Doc2Vec
-from sklearn.utils import shuffle
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(ROOT_PATH)
@@ -21,7 +17,6 @@ sys.path.append(ROOT_PATH)
 from src.datafactory.weibo_emotion_classification import constant
 from src.datafactory.weibo_emotion_classification import segment_process
 from src.datafactory.weibo_emotion_classification import tb_weibo_content_for_classification as twc
-from src.datafactory.weibo_emotion_classification import apply_preprogress as ap
 from src.datafactory.weibo_emotion_classification import model_evaluation as me
 from src.datafactory.weibo_emotion_classification import classification_model as cm
 
@@ -34,12 +29,12 @@ def get_train_dataset(startdate1, startdate2, startdate3, enddate):
     :param enddate:
     :return:
     """
-    pos_data = read_weibo_emotion_data(startdate1, enddate, emotion=1)
-    neg_data = read_weibo_emotion_data(startdate2, enddate, emotion=-1)
-    neu_data = read_weibo_emotion_data(startdate3, enddate, emotion=0)
-    pos_data = get_segment(pos_data)
-    neg_data = get_segment(neg_data)
-    neu_data = get_segment(neu_data)
+    pos_data = __read_weibo_emotion_data(startdate1, enddate, emotion=1)
+    neg_data = __read_weibo_emotion_data(startdate2, enddate, emotion=-1)
+    neu_data = __read_weibo_emotion_data(startdate3, enddate, emotion=0)
+    pos_data = __get_segment(pos_data)
+    neg_data = __get_segment(neg_data)
+    neu_data = __get_segment(neu_data)
 
     total_data_X = pos_data + neg_data + neu_data
     total_data_Y = np.concatenate((np.ones(len(pos_data)), -1 * np.ones(len(neg_data)),
@@ -47,7 +42,7 @@ def get_train_dataset(startdate1, startdate2, startdate3, enddate):
     return total_data_X, total_data_Y
 
 
-def read_weibo_emotion_data(start_date, end_date, emotion, data_source_ids=1):
+def __read_weibo_emotion_data(start_date, end_date, emotion, data_source_ids=1):
     """
     :param start_date:
     :param end_date:
@@ -65,7 +60,7 @@ def read_weibo_emotion_data(start_date, end_date, emotion, data_source_ids=1):
     return query
 
 
-def get_segment(result):
+def __get_segment(result):
     """
     :param result:
     :return:
@@ -74,7 +69,7 @@ def get_segment(result):
     pool = Pool(processes=constant.process_num)
     try:
         for line in result:
-            seg_res = pool.apply_async(single_segment, args=(line,))
+            seg_res = pool.apply_async(__single_segment, args=(line,))
             aux.append(seg_res)
         pool.close()
         pool.join()
@@ -98,7 +93,7 @@ def get_segment(result):
 #     return aux
 
 
-def single_segment(line):
+def __single_segment(line):
     """
     :param line:
     :return:

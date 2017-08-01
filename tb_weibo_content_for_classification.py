@@ -112,6 +112,9 @@ def query(filter_instance):
         logging.critical("execute sql failed: %s" % e)
     except UnicodeEncodeError as e:
         logging.critical("execute sql failed: %s" % e)
+    finally:
+        if conn is not None:
+            conn.close()
     return None
 
 

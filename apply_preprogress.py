@@ -19,13 +19,12 @@ from src.datafactory.weibo_emotion_classification import tb_weibo_content_for_cl
 
 def get_apply_dataset(startdate, enddate):
     """
-
     :param startdate:
     :param enddate:
     :return:
     """
-    result = read_weibo_data(startdate, enddate)
-    data = get_segment(result)
+    result = __read_weibo_data(startdate, enddate)
+    data = __get_segment(result)
 
     data_x = []
     data_y = []
@@ -36,9 +35,8 @@ def get_apply_dataset(startdate, enddate):
     return data_x, data_y
 
 
-def read_weibo_data(start_date, end_date, data_source_ids=1):
+def __read_weibo_data(start_date, end_date, data_source_ids=1):
     """
-
     :param start_date:
     :param end_date:
     :param data_source_ids:
@@ -52,9 +50,8 @@ def read_weibo_data(start_date, end_date, data_source_ids=1):
     return query
 
 
-def get_segment(result):
+def __get_segment(result):
     """
-
     :param result:
     :return:
     """
@@ -62,7 +59,7 @@ def get_segment(result):
     pool = Pool(processes=constant.process_num)
     try:
         for line in result:
-            seg_res = pool.apply_async(single_segment, args=(line,))
+            seg_res = pool.apply_async(__single_segment, args=(line,))
             ret.append(seg_res)
         pool.close()
         pool.join()
@@ -84,7 +81,7 @@ def get_segment(result):
 #     return line
 
 
-def single_segment(line):
+def __single_segment(line):
     """
     :param line:
     :return:

@@ -5,10 +5,8 @@ Created on 2017年7月19日
 @author: baijingting
 """
 
-
 def classification_evaluate(test_Y, pred_Y):
     """
-
     :param test_Y:
     :param pred_Y:
     :return:
@@ -61,7 +59,6 @@ def classification_evaluate(test_Y, pred_Y):
 
 def evaluate(data_y, pred_y, pos_pred_y, neg_pred_y):
     """
-
     :param data_y:
     :param pred_y:
     :param pos_pred_y:

@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-/***************************************************************************
- * 
- * Copyright (c) 2015 Baidu.com, Inc. All Rights Reserved
- * 
- **************************************************************************/
-
 /**
  * @file nlpconnect.py
- * @author wangjing04(com@baidu.com)
+ * @author baijingting
  * @date 2015/12/01 13:34:11
  * @brief 
  *  
@@ -45,11 +39,11 @@ class SegmentProcess(object):
         )
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            retn = p.communicate()[0]
+            retn, err = p.communicate()
         except Exception as e:
             logging.critical("segment(%s) failed and try again:%s" % (sentence, e))
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            retn = p.communicate()[0]
+            retn, err = p.communicate()
 
         return retn
 
@@ -64,8 +58,7 @@ class SegmentProcess(object):
             if "scw_out" in segment_result_dict and "wordsepbuf" in segment_result_dict["scw_out"]:
                 wordsepbuf = segment_result_dict["scw_out"]["wordsepbuf"]
                 wordsepbuf_split = wordsepbuf.strip("\t").split("\t")
-                for word in wordsepbuf_split:
-                    segment_result.append(word)
+                segment_result.extend(wordsepbuf_split)
             else:
                 logging.critical("segment result(%s) error without wordsepbuf"
                                  % segment_result_str)
