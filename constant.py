@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on 2017年7月19日
-
-@author: baijingting
-"""
 
 OBJECTIVE = "train_overall"
 # OBJECTIVE = "train_reclassify"
