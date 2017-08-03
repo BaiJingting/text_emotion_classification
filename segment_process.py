@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-/**
- * @file nlpconnect.py
- * @author baijingting
- * @date 2015/12/01 13:34:11
- * @brief 
- *  
- **/
- """
+
 import os
 import logging
 import subprocess
