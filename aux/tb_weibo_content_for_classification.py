@@ -71,11 +71,13 @@ def query(filter_instance):
         cursor.execute(sql_query)
         result = cursor.fetchall()
         cursor.close()
+        conn.close()
         return result
     except MySQLdb.Error as e:
         logging.critical("execute sql failed: %s" % e)
     except UnicodeEncodeError as e:
         logging.critical("execute sql failed: %s" % e)
+    conn.close()
     return None
 
 
